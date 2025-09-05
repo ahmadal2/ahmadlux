@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation.jsx';
-import Footer from './components/Footer.jsx';
+import Footer from './components/footer.jsx';
 import Home from './pages/Home.jsx';
 import Cars from './pages/Cars.jsx';
 import Services from './pages/Services.jsx';
