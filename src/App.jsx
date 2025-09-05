@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navigation from './components/Navigation';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import Cars from './pages/Cars';
-import Services from './pages/Services';
-import Workshop from './pages/Workshop';
-import Contact from './pages/Contact';
+import Navigation from './components/Navigation.jsx';
+import Footer from './components/Footer.jsx';
+import Home from './pages/Home.jsx';
+import Cars from './pages/Cars.jsx';
+import Services from './pages/Services.jsx';
+import Workshop from './pages/Workshop.jsx';
+import Contact from './pages/Contact.jsx';
 import './App.css';
 
 

@@ -70,6 +70,7 @@ src/
 ├── components/
 │   ├── Navigation.jsx
 │   └── Footer.jsx
+│   └── Footer.module.jsx
 ├── pages/
 │   ├── Home.jsx
 │   ├── Cars.jsx

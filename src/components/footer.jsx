@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import './Footer.module.css';
+import './Footer.css';
 
 const Footer = () => {
   const navLinks = [
