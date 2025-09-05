@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { fetchCars } from "../utils/carService";
 
 const Cars = () => {
   const [cars, setCars] = useState([]);
