@@ -11,6 +11,7 @@ const Contact = () => {
   });
   
   const [formStatus, setFormStatus] = useState(''); // 'success', 'error', or ''
+  const [errorMessage, setErrorMessage] = useState(''); // Specific error message
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,25 +21,47 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Simulate form submission
-    setTimeout(() => {
-      setFormStatus('success');
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
+    try {
+      // Use the proxy path for API requests
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
       
-      // Reset status after 5 seconds
-      setTimeout(() => {
-        setFormStatus('');
-      }, 5000);
-    }, 1000);
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setFormStatus('success');
+        setErrorMessage(''); // Clear any previous error message
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+        
+        // Reset status after 5 seconds
+        setTimeout(() => {
+          setFormStatus('');
+        }, 5000);
+      } else {
+        setFormStatus('error');
+        setErrorMessage(result.message || 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+        // Keep the form data so the user doesn't have to re-enter everything
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setFormStatus('error');
+      setErrorMessage('Netzwerkfehler: Es konnte keine Verbindung zum Server hergestellt werden.');
+      // Keep the form data so the user doesn't have to re-enter everything
+    }
   };
 
   return (
@@ -180,7 +203,7 @@ const Contact = () => {
             
             {formStatus === 'error' && (
               <div className="form-message error">
-                <p>Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.</p>
+                <p>{errorMessage || 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.'}</p>
               </div>
             )}
             

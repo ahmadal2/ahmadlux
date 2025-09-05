@@ -4,18 +4,29 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 // Load environment variables
 dotenv.config();
+
+// Check if required environment variables are set
+if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+  console.warn('Warning: GMAIL_USER or GMAIL_PASS not set in environment variables. Email functionality will be disabled.');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 4000; // Changed to 4000 to avoid port conflicts
+const PORT = process.env.PORT || 5000; // Changed to 5000 to avoid port conflicts
 
 // Middleware
 app.use(express.json());
+// Add CORS middleware to allow requests from the frontend
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'], // Allow requests from Vite dev server
+  credentials: true
+}));
 
 // Serve static files from the React app build directory (only in production)
 if (process.env.NODE_ENV === 'production') {
@@ -31,22 +42,30 @@ let appointments = [];
 // Create transporter for sending emails
 let transporter;
 try {
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS
-    }
-  });
-  
-  // Verify transporter configuration
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error('Email transporter configuration error:', error);
-    } else {
-      console.log('Email transporter is ready to send messages');
-    }
-  });
+  // Only create transporter if credentials are provided
+  if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
+      }
+    });
+    
+    // Verify transporter configuration
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error('Email transporter configuration error:', error);
+        console.error('This might be due to incorrect Gmail credentials or Gmail security settings.');
+        console.error('Make sure you are using an app password, not your regular Gmail password.');
+      } else {
+        console.log('Email transporter is ready to send messages');
+      }
+    });
+  } else {
+    console.log('Email transporter not configured: Missing GMAIL_USER or GMAIL_PASS environment variables');
+    transporter = null;
+  }
 } catch (error) {
   console.error('Failed to create email transporter:', error);
   transporter = null;
@@ -141,6 +160,68 @@ app.post('/api/appointments', async (req, res) => {
       success: true,
       appointment: newAppointment,
       message: 'Appointment booked successfully! (Email notifications are not configured)'
+    });
+  }
+});
+
+// POST /api/contact - New endpoint to handle contact form submissions
+app.post('/api/contact', async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+  
+  // Simple validation
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Missing required fields',
+      message: 'Bitte füllen Sie alle erforderlichen Felder aus.' 
+    });
+  }
+  
+  // Log the incoming request for debugging
+  console.log('Contact form submission received:', { name, email, phone, subject, message });
+  
+  // Send email notification (if transporter is configured)
+  if (transporter) {
+    try {
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: process.env.GMAIL_USER, // Send to the same email address
+        subject: `Kontaktanfrage: ${subject}`,
+        html: `
+          <h2>Neue Kontaktanfrage</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>E-Mail:</strong> ${email}</p>
+          <p><strong>Telefon:</strong> ${phone || 'Nicht angegeben'}</p>
+          <p><strong>Betreff:</strong> ${subject}</p>
+          <p><strong>Nachricht:</strong></p>
+          <p>${message}</p>
+          <p><strong>Gesendet am:</strong> ${new Date().toLocaleString('de-DE')}</p>
+        `
+      };
+      
+      console.log('Attempting to send email...');
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully');
+      
+      res.json({
+        success: true,
+        message: 'Ihre Nachricht wurde erfolgreich gesendet! Wir werden uns in Kürze bei Ihnen melden.'
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Even if email fails, we still want to provide feedback
+      res.status(500).json({
+        success: false,
+        message: 'Es gab ein Problem beim Senden Ihrer Nachricht. Bitte versuchen Sie es später erneut.',
+        error: error.message // Include error message for debugging
+      });
+    }
+  } else {
+    // No email transporter configured
+    console.log('Email transporter is not configured');
+    res.status(500).json({
+      success: false,
+      message: 'Kontaktformular ist nicht richtig konfiguriert. (E-Mail-Transporter fehlt)'
     });
   }
 });
