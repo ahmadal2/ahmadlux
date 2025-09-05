@@ -1,0 +1,33 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Reset and base styles are now in App.jsx */
+
+/* Remove all other styles since they're now in App.jsx */
+
+/* Keep only essential global styles that can't be in App.jsx */
+body {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #0a0a0a 0%, #050505 100%);
+  color: #ffffff;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #eac266;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a26e4b;
+}
